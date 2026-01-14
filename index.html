@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRScout to Google Sheets Integrator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 0 0;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .success {
+            color: #4caf50;
+            margin-top: 10px;
+        }
+        .error {
+            color: #f44336;
+            margin-top: 10px;
+        }
+        .instructions {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QRScout to Google Sheets Integrator</h1>
+        
+        <div class="instructions">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Use QRScout at <a href="https://frc2713.github.io/QRScout/" target="_blank">https://frc2713.github.io/QRScout/</a> to collect scouting data</li>
+                <li>When you commit the data, click "Copy Data" in the QR modal</li>
+                <li>Paste the copied data into the box below</li>
+                <li>Click "Send to Google Sheets" to append the data to your sheet</li>
+            </ol>
+        </div>
+        
+        <label for="data">Paste QRScout Data Here:</label><br>
+        <textarea id="data" placeholder="Paste your tab-delimited scouting data here..."></textarea><br>
+        
+        <button id="sendButton" onclick="sendToSheets()">Send to Google Sheets</button>
+        <button onclick="clearData()">Clear</button>
+        
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbyDWPM6KLihDYwc5ablRdggL8gyOjqa6ZvTboUNEPoG8ePzLvdzVcZTijGDLl1Albz0/exec';
+
+        async function sendToSheets() {
+            const data = document.getElementById('data').value.trim();
+            const button = document.getElementById('sendButton');
+            const message = document.getElementById('message');
+            
+            if (!data) {
+                message.innerHTML = '<div class="error">Please paste some data first!</div>';
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Sending...';
+            message.innerHTML = '';
+            
+            try {
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        data: data
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    message.innerHTML = '<div class="success">Data sent to Google Sheets successfully!</div>';
+                    document.getElementById('data').value = '';
+                } else {
+                    message.innerHTML = '<div class="error">Error sending data: ' + result.error + '</div>';
+                }
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                message.innerHTML = '<div class="error">Error: ' + errorMessage + '</div>';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Send to Google Sheets';
+            }
+        }
+
+        function clearData() {
+            document.getElementById('data').value = '';
+            document.getElementById('message').innerHTML = '';
+        }
+    </script>
+</body>
+</html></content>
+<parameter name="filePath">/workspaces/QRScout-googlesheets/index.html
